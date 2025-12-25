@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Pocke Money system</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+    <div class="spinner"></div><br><br>
+    <div class="money">
+💵💵💵💵💵💵
+    </div>
+    
+</div>
+
+<div class="container" id="main-content">
+    <!-- Left Side -->
+     
+    <div class="left" id="left-section">
+         <marquee behavior="move" direction="right"><h1>Welcome</h1></marquee>
+        <img src="image.png" alt="">
+       <h1>The New Digital Service 🤑🤑Smart school assistant System💵💵</h1></marquee>
+        <p>"Let's continue building the Smart school assistant System"</p>
+    </div>
+
+    <!-- Right Side -->
+    <div class="right" id="right-section">
+        <div class="login-box" id="login-box">
+            <h2>Login to Your Account</h2>
+            <form id="login-form">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" required placeholder="Type your Email ...">
+
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required placeholder="Type your Password ...">
+
+                <div id="password-strength"></div>
+
+                <button type="submit">
+                    <span class="loader-btn" style="display:none;"></span>
+                    Login
+                </button>
+            </form>
+            <p>Forgot your password? <a href="#">Reset here</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Page loading
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        const container = document.getElementById('main-content');
+        container.style.display = 'flex';
+        container.classList.add('show');
+
+        document.getElementById('left-section').classList.add('show');
+        document.getElementById('right-section').classList.add('show');
+    }, 2000);
+});
+
+// Password strength checker
+const passwordInput = document.getElementById('password');
+const strengthText = document.getElementById('password-strength');
+
+passwordInput.addEventListener('input', () => {
+    const value = passwordInput.value;
+    let strength = '';
+    if(value.length < 6) strength = 'Weak';
+    else if(value.length < 10) strength = 'Medium';
+    else strength = 'Strong';
+
+    strengthText.textContent = strength;
+    strengthText.className = '';
+    if(strength === 'Weak') strengthText.classList.add('weak');
+    if(strength === 'Medium') strengthText.classList.add('medium');
+    if(strength === 'Strong') strengthText.classList.add('strong');
+});
+
+// Login verification
+const loginForm = document.getElementById('login-form');
+const loginButton = loginForm.querySelector('button');
+const loaderBtn = loginButton.querySelector('.loader-btn');
+const loginBox = document.getElementById('login-box');
+
+const VALID_EMAIL = "niyitangaeric77@gmail.com";
+const VALID_PASSWORD = "Eric123456@";
+
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    loaderBtn.style.display = 'inline-block';
+    loginButton.classList.add('loading');
+
+    setTimeout(() => {
+        loaderBtn.style.display = 'none';
+        loginButton.classList.remove('loading');
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if(email === VALID_EMAIL && password === VALID_PASSWORD){
+            showNotification("✅ Login successful! ", "success");
+            // Redirect to Pocket Money System dashboard
+            setTimeout(() => {
+                window.location.href = "dashboard.html"; // Replace with your dashboard path
+            }, 1500);
+        } else {
+            showNotification("❌ Invalid email or password", "error");
+            loginBox.classList.add('shake');
+            setTimeout(() => loginBox.classList.remove('shake'), 500);
+        }
+    }, 1200);
+});
+
+// Notification system
+function showNotification(message, type){
+    const notification = document.createElement("div");
+    notification.textContent = message;
+    notification.className = `notification ${type}`;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.style.opacity = '1', 100);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
+}
+passwordInput.addEventListener('input', () => {
+    const value = passwordInput.value;
+    let strength = '';
+    
+    if(value.length < 6) strength = 'Weak';
+    else if(value.length < 10) strength = 'Medium';
+    else strength = 'Strong';
+
+    strengthText.textContent = strength;
+    strengthText.className = '';
+    loginButton.style.backgroundColor = ''; // reset
+
+    if(strength === 'Weak') {
+        strengthText.classList.add('weak');
+        loginButton.style.backgroundColor = '#dc2626'; // red
+    }
+    if(strength === 'Medium') {
+        strengthText.classList.add('medium');
+        loginButton.style.backgroundColor = '#f59e0b'; // orange
+    }
+    if(strength === 'Strong') {
+        strengthText.classList.add('strong');
+        loginButton.style.backgroundColor = '#16a34a'; // green
+    }
+});
+
+</script>
+
+</body>
+</html>
