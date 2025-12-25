@@ -153,106 +153,139 @@ button.action-btn:hover{background:#1e40af;}
 </div>
 
 <script>
-// ------------------- DATA -------------------
+// ------------------- Loading & Alerts -------------------
+function showLoading(show=true){document.getElementById('loading').classList.toggle('show', show);}
+function showAlert(msg){const el=document.getElementById('alerts'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3000);}
+
+// ------------------- Data -------------------
 let students = JSON.parse(localStorage.getItem('students')) || {};
-let transactionHistory = JSON.parse(localStorage.getItem('transactionHistory')) || [];
-let studentHistory = JSON.parse(localStorage.getItem('studentHistory')) || {};
 let lastStudentId = parseInt(localStorage.getItem('lastStudentId')) || 0;
+let transactionHistory = JSON.parse(localStorage.getItem('transactionHistory')) || [];
+let selectedStudentId=null;
+
+// ------------------- Save -------------------
+function saveData(){localStorage.setItem('students',JSON.stringify(students)); localStorage.setItem('lastStudentId',lastStudentId); localStorage.setItem('transactionHistory',JSON.stringify(transactionHistory));}
+
+// ------------------- Summary -------------------
+function updateSummary(){
+    let total=0,low=0;
+    Object.values(students).forEach(s=>{total+=s.amount||0; if((s.amount||0)<5000) low++;});
+    document.getElementById('total-money').textContent=total+' RWF';
+    document.getElementById('total-students').textContent=Object.keys(students).length;
+    document.getElementById('low-balance').textContent=low;
+}
+
+// ------------------- Line Chart -------------------
+let chart=null;
+function renderChart(){
+    const ctx=document.getElementById('balanceChart').getContext('2d');
+    const labels=[], data=[];
+    Object.values(students).forEach(s=>{labels.push(s.name); data.push(s.amount||0);});
+    if(chart) chart.data.labels=labels, chart.data.datasets[0].data=data, chart.update();
+    else chart=new Chart(ctx,{type:'line', data:{labels, datasets:[{label:'Balance', data, fill:false, borderColor:'#1d4ed8', tension:0.3, pointBackgroundColor:'#1d4ed8'}]}, options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
+}
+
+// ------------------- Pagination & Students -------------------
+let studentsPerPage=25, currentPage=1;
+function renderStudentsTable(){
+    const tbody=document.getElementById('students-table').querySelector('tbody'); tbody.innerHTML='';
+    const filter=document.getElementById('student-search').value.toLowerCase();
+    const allStudents=Object.entries(students).filter(([id,s])=>s.name.toLowerCase().includes(filter));
+    const pageCount=Math.ceil(allStudents.length/studentsPerPage);
+    if(currentPage>pageCount) currentPage=1;
+    const start=(currentPage-1)*studentsPerPage;
+    const end=start+studentsPerPage;
+    allStudents.slice(start,end).forEach(([id,s])=>{tbody.insertAdjacentHTML('beforeend',`<tr><td>${id}</td><td>${s.name}</td><td>${s.amount||0}</td></tr>`);});
+    const pagination=document.getElementById('students-pagination'); pagination.innerHTML='';
+    for(let i=1;i<=pageCount;i++){const btn=document.createElement('button'); btn.textContent=i; if(i===currentPage) btn.style.background='#ef4444'; btn.onclick=()=>{currentPage=i; renderStudentsTable();}; pagination.appendChild(btn);}
+}
+
+// ------------------- Add Student -------------------
+function addStudent(){
+    const name=document.getElementById('new-student-name').value.trim();
+    let amount=parseInt(document.getElementById('new-student-amount').value);
+    if(!amount) amount=0;
+    if(!name){alert('Enter name'); return;}
+    lastStudentId++; students[lastStudentId]={name,amount}; saveData();
+    document.getElementById('new-student-name').value=''; document.getElementById('new-student-amount').value='';
+    showAlert(`Student "${name}" added!`); renderStudentsTable(); updateSummary(); renderChart();
+}
+
+// ------------------- Transaction Table -------------------
+function renderTransactionTable(){
+    const tbody=document.getElementById('transaction-table').querySelector('tbody'); tbody.innerHTML='';
+    const filter=document.getElementById('transaction-search').value.toLowerCase();
+    Object.entries(students).forEach(([id,s])=>{
+        if(filter && !s.name.toLowerCase().includes(filter)) return;
+        const row=document.createElement('tr');
+        row.innerHTML=`<td>${id}</td><td>${s.name}</td><td>${s.amount||0}</td>`;
+        row.onclick=()=>{ selectedStudentId=id; highlightRow(row); };
+        tbody.appendChild(row);
+    });
+}
+function highlightRow(row){document.querySelectorAll('#transaction-table tbody tr').forEach(r=>r.style.background=''); row.style.background='#e0e7ff';}
+
+// ------------------- Submit Transaction -------------------
+function submitTransaction(){
+    if(!selectedStudentId){alert('Select a student from table'); return;}
+    const type=document.getElementById('transaction-type').value;
+    const amount=parseInt(document.getElementById('transaction-amount').value);
+    if(!amount||amount<=0){alert('Enter valid amount'); return;}
+    if(type==='add'){students[selectedStudentId].amount=(students[selectedStudentId].amount||0)+amount;}
+    else{ if((students[selectedStudentId].amount||0)<amount){alert('Insufficient balance'); return;} students[selectedStudentId].amount-=amount;}
+    const date=new Date().toLocaleDateString();
+    transactionHistory.push({date, student:students[selectedStudentId].name, type:type==='add'?'Add':'Deduct', amount, balance:students[selectedStudentId].amount});
+    saveData(); renderTransactionTable(); renderStudentsTable(); renderHistoryTable(); updateSummary(); renderChart();
+    showAlert(`Transaction "${type}" of ${amount} RWF for ${students[selectedStudentId].name} successful!`);
+    document.getElementById('transaction-amount').value=''; selectedStudentId=null;
+}
+
+// ------------------- History -------------------
+function renderHistoryTable(){
+    const tbody=document.getElementById('history-table').querySelector('tbody'); tbody.innerHTML='';
+    const filter=document.getElementById('history-search').value.toLowerCase();
+    transactionHistory.forEach(t=>{ if(filter && !t.student.toLowerCase().includes(filter)) return;
+        tbody.insertAdjacentHTML('beforeend', `<tr><td>${t.date}</td><td>${t.student}</td><td>${t.type}</td><td>${t.amount}</td><td>${t.balance}</td></tr>`); });
+}
+
+// ------------------- Reports -------------------
 let reportChart=null;
-let balanceChart=null;
+function renderReports(){
+    let total=0, low=0;
+    Object.values(students).forEach(s=>{total+=s.amount||0; if((s.amount||0)<5000) low++;});
+    document.getElementById('report-total-money').textContent=total+' RWF';
+    document.getElementById('report-total-students').textContent=Object.keys(students).length;
+    document.getElementById('report-low-balance').textContent=low;
+    const ctx=document.getElementById('reportChart').getContext('2d');
+    const labels=[], data=[];
+    Object.values(students).forEach(s=>{labels.push(s.name); data.push(s.amount||0);});
+    if(reportChart) reportChart.data.labels=labels, reportChart.data.datasets[0].data=data, reportChart.update();
+    else reportChart=new Chart(ctx,{type:'line', data:{labels, datasets:[{label:'Balance', data, fill:false, borderColor:'#1d4ed8', tension:0.3, pointBackgroundColor:'#1d4ed8'}]}, options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
+    const tbody=document.getElementById('report-table').querySelector('tbody'); tbody.innerHTML='';
+    transactionHistory.forEach(t=>{tbody.insertAdjacentHTML('beforeend', `<tr><td>${t.date}</td><td>${t.student}</td><td>${t.type}</td><td>${t.amount}</td><td>${t.balance}</td></tr>`);});
+}
 
-// ------------------- UTILITY -------------------
-function showLoading(show){document.getElementById('loading').classList.toggle('show',show);}
-function showAlert(msg){const a=document.getElementById('alerts'); a.textContent=msg; a.classList.add('show'); setTimeout(()=>{a.classList.remove('show');},3000);}
-function saveData(){localStorage.setItem('students',JSON.stringify(students)); localStorage.setItem('transactionHistory',JSON.stringify(transactionHistory)); localStorage.setItem('studentHistory',JSON.stringify(studentHistory)); localStorage.setItem('lastStudentId',lastStudentId);}
-function getRandomColor(seed){let hash=0; for(let i=0;i<seed.length;i++){hash=seed.charCodeAt(i)+((hash<<5)-hash);} let c=(hash&0x00FFFFFF).toString(16).toUpperCase(); return "#"+"00000".substring(0,6-c.length)+c;}
+// ------------------- Print -------------------
+function printReport(){const printContents=document.getElementById('reports-section').innerHTML; const originalContents=document.body.innerHTML; document.body.innerHTML=printContents; window.print(); document.body.innerHTML=originalContents; window.location.reload();}
 
-// ------------------- SECTION NAV -------------------
+// ------------------- Section Navigation -------------------
 function showSection(section){
     showLoading(true);
     setTimeout(()=>{
         document.querySelectorAll('.card').forEach(c=>c.classList.remove('show'));
         document.getElementById(section+'-section').classList.add('show');
-        updateSummary();
-        renderStudentsTable();
-        renderTransactionTable();
-        renderHistoryTable();
-        renderReports();
+        renderStudentsTable(); renderTransactionTable(); renderHistoryTable(); updateSummary(); renderChart();
+        if(section==='reports') renderReports();
         showLoading(false);
     },200);
 }
-function logout(){if(confirm('Logout?')) window.location.href='index.html';}
 
-// ------------------- SUMMARY -------------------
-function updateSummary(){
-    let total=0, low=0;
-    Object.values(students).forEach(s=>{total+=s.amount||0; if((s.amount||0)<5000) low++;});
-    document.getElementById('total-money').textContent=total+' RWF';
-    document.getElementById('total-students').textContent=Object.keys(students).length;
-    document.getElementById('low-balance').textContent=low;
-    if(balanceChart){balanceChart.data.datasets[0].data=Object.values(students).map(s=>s.amount||0); balanceChart.data.labels=Object.values(students).map(s=>s.name); balanceChart.update();}
-    else{
-        const ctx=document.getElementById('balanceChart').getContext('2d');
-        balanceChart=new Chart(ctx,{type:'line',data:{labels:Object.values(students).map(s=>s.name),datasets:[{label:'Balance',data:Object.values(students).map(s=>s.amount||0),fill:false,borderColor:'#1d4ed8',tension:0.3,pointBackgroundColor:'#1d4ed8'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-    }
-}
+// ------------------- Logout -------------------
+function logout(){if(confirm('Logout?')){window.location.href='index.html';}}
 
-// ------------------- STUDENTS -------------------
-let studentPerPage=25,currentPage=1;
-function renderStudentsTable(){
-    const tbody=document.getElementById('students-table').querySelector('tbody');
-    const search=document.getElementById('student-search').value.toLowerCase();
-    let filtered=Object.entries(students).filter(([id,s])=>s.name.toLowerCase().includes(search));
-    let totalPages=Math.ceil(filtered.length/studentPerPage);
-    if(currentPage>totalPages) currentPage=1;
-    let pageData=filtered.slice((currentPage-1)*studentPerPage,currentPage*studentPerPage);
-    tbody.innerHTML='';
-    pageData.forEach(([id,s])=>{tbody.insertAdjacentHTML('beforeend',`<tr><td>${id}</td><td>${s.name}</td><td>${s.amount||0}</td></tr>`);});
-    // Pagination
-    const pagDiv=document.getElementById('students-pagination'); pagDiv.innerHTML='';
-    for(let i=1;i<=totalPages;i++){let btn=document.createElement('button'); btn.textContent=i; btn.onclick=()=>{currentPage=i; renderStudentsTable();}; pagDiv.appendChild(btn);}
-}
+// ------------------- Initial -------------------
+renderStudentsTable(); renderTransactionTable(); renderHistoryTable(); updateSummary(); renderChart();
+</script>
 
-// ------------------- ADD STUDENT -------------------
-function addStudent(){
-    const name=document.getElementById('new-student-name').value.trim();
-    let amt=parseInt(document.getElementById('new-student-amount').value);
-    if(!amt) amt=0;
-    if(!name){showAlert('Enter student name'); return;}
-    lastStudentId++;
-    students[lastStudentId]={name:name,amount:amt};
-    saveData();
-    renderStudentsTable(); renderTransactionTable(); updateSummary();
-    document.getElementById('new-student-name').value=''; document.getElementById('new-student-amount').value='';
-    showAlert(`Student ${name} added successfully!`);
-}
-
-// ------------------- TRANSACTIONS -------------------
-function renderTransactionTable(){
-    const tbody=document.getElementById('transaction-table').querySelector('tbody');
-    const search=document.getElementById('transaction-search').value.toLowerCase();
-    tbody.innerHTML='';
-    Object.entries(students).filter(([id,s])=>s.name.toLowerCase().includes(search)).forEach(([id,s])=>{tbody.insertAdjacentHTML('beforeend',`<tr onclick="selectTransactionStudent(${id})"><td>${id}</td><td>${s.name}</td><td>${s.amount||0}</td></tr>`);});
-}
-let selectedStudentId=null;
-function selectTransactionStudent(id){selectedStudentId=id; showAlert(`Selected ${students[id].name}`);}
-function submitTransaction(){
-    if(!selectedStudentId){showAlert('Select a student'); return;}
-    let type=document.getElementById('transaction-type').value;
-    let amt=parseInt(document.getElementById('transaction-amount').value);
-    if(!amt || amt<=0){showAlert('Enter valid amount'); return;}
-    if(type==='deduct' && (students[selectedStudentId].amount||0)<amt){showAlert('Insufficient balance'); return;}
-    students[selectedStudentId].amount=type==='add'? (students[selectedStudentId].amount||0)+amt : (students[selectedStudentId].amount||0)-amt;
-    // Update history
-    const date=new Date().toLocaleString();
-    transactionHistory.push({date:date, student:students[selectedStudentId].name,type:type==='add'?'Add':'Deduct',amount:amt,balance:students[selectedStudentId].amount});
-    if(!studentHistory[selectedStudentId]) studentHistory[selectedStudentId]=[];
-    studentHistory[selectedStudentId].push({date:date,balance:students[selectedStudentId].amount});
-    saveData(); renderTransactionTable(); renderHistoryTable(); updateSummary(); renderReports();
-    document.getElementById('transaction-amount').value=''; showAlert('Transaction successful!');
-}
-
-// ------------------- HISTORY -------------------
-function renderHistoryTable(){
-    const tbody=document.getElementById('history-table').querySelector('tbody');
-    const search=document.getElementById('history-search').value.toLowerCase();
+</body>
+</html>
