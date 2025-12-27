@@ -20,8 +20,34 @@ body { background-color: #f3f4f6; min-height: 100vh; overflow-x: hidden; }
     border-radius: 50%;
     width: 60px; height: 60px;
     animation: spin 1s linear infinite;
+    
 }
 @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+/* Make profile picture responsive */
+.profile-pic {
+    width: 100px;        /* default size */
+    height: 100px;       /* default size */
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    max-width: 100%;     /* ensure it never overflows container */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-pic {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-pic {
+        width: 60px;
+        height: 60px;
+    }
+}
+
 
 /* Container Layout */
 .container {
@@ -33,23 +59,100 @@ body { background-color: #f3f4f6; min-height: 100vh; overflow-x: hidden; }
 }
 .container.show { opacity: 1; }
 
-@media(min-width:1024px) { .container { flex-direction: row; } }
+/* -------------------- RESPONSIVE -------------------- */
+@media (max-width: 1024px) {
+    .left h1 { font-size: 1.8rem; }
+    .right .login-box { padding: 25px; }
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .left, .right {
+        width: 100%;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .left h1 { font-size: 1.5rem; }
+    .left p { font-size: 0.95rem; }
+    .right .login-box { max-width: 100%; padding: 20px; }
+    .right input, .right button { font-size: 0.95rem; padding: 10px; }
+}
+
+@media (max-width: 480px) {
+    .left h1 { font-size: 1.3rem; }
+    .left p { font-size: 0.9rem; }
+    .right .login-box { padding: 15px; }
+    .right input, .right button { font-size: 0.9rem; padding: 8px; }
+}
+/* Slide-in animation for mobile login box */
+@keyframes slideIn {
+    0% { transform: translateY(50px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.right .login-box.show {
+    animation: slideIn 0.7s ease-out forwards;
+}
+
 
 /* Left Section */
 .left {
-    background-color: #1d4ed8;
+    background-color: #1d4ed8; /* keep your blue */
     color: white;
     flex: 2;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 40px;
-    transform: translateX(-100%);
+    min-height: 100vh;        /* make it cover full viewport height */
+    box-sizing: border-box;   /* include padding in width/height */
     transition: transform 1s ease;
 }
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .left {
+        padding: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .left {
+        flex: 1;
+        min-height: auto;       /* adapt to content */
+        padding: 20px;
+        text-align: center;
+        transform: translateX(0);
+    }
+}
+
 .left.show { transform: translateX(0); }
 
-.left img { width:600px; margin-bottom: 30px; }
+.left img {
+    max-width: 100%;       /* image never exceeds container width */
+    height: auto;          /* maintain aspect ratio */
+    display: block;        /* remove extra inline spacing */
+    margin: 20px auto;     /* center the image horizontally */
+}
+
+/* Optional: make the image smaller on small screens */
+@media (max-width: 768px) {
+    .left img {
+        max-width: 80%;    /* smaller image on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .left img {
+        max-width: 100%;   /* almost full width for tiny screens */
+    }
+}
+
 
 .left h1 {
     font-size: 2.5rem;
