@@ -9,6 +9,71 @@
 * {box-sizing:border-box; margin:0; padding:0; font-family: Arial, sans-serif;}
 body {display:flex; min-height:100vh; background:#f3f4f6; position:relative;}
 /* Sidebar */
+
+/* Existing CSS ... keep all of it */
+
+@media (max-width: 1024px) {
+    .main-header h1 { font-size: 1.5rem; }
+    .main-header button { padding: 6px 12px; font-size: 0.9rem; }
+}
+/* Sidebar adjustments for responsiveness */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 200px; /* slightly smaller on tablets */
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;            /* full width for mobile */
+        flex-direction: row;    /* horizontal layout */
+        overflow-x: auto;       /* allow scrolling if links overflow */
+        position: relative;     
+    }
+    .sidebar h2 {
+        display: none;          /* hide title on small screens */
+    }
+    .sidebar a {
+        flex: 1;
+        text-align: center;
+        padding: 12px 10px;
+        white-space: nowrap;    /* prevent wrapping */
+    }
+}
+
+/* Optional: make the sidebar toggle button always visible on small screens */
+#sidebar-toggle {
+    display: block;            /* show toggle on small screens */
+}
+
+@media (max-width: 768px) {
+    body { flex-direction: column; }
+    .sidebar {
+        width: 100%; 
+        flex-direction: row; 
+        overflow-x: auto; 
+        position: relative;
+    }
+    .sidebar h2 { display: none; } /* Hide sidebar title on small screens */
+    .sidebar a { flex: 1; text-align: center; padding: 12px 10px; white-space: nowrap; }
+    .main { padding: 10px; }
+    .profile-pic { width: 80px; height: 80px; }
+    .summary-card { flex-direction: column; }
+    .summary-card .summary { margin-bottom: 10px; margin-right: 0; }
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+    input, select, button.action-btn { font-size: 1rem; }
+}
+
+@media (max-width: 480px) {
+    .main-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .main-header h1 { font-size: 1.3rem; }
+    .main-header button { width: 100%; }
+    .card { padding: 15px; }
+    .summary-card .summary h2 { font-size: 1.3rem; }
+    .summary-card .summary p { font-size: 0.9rem; }
+}
+
+
 .sidebar {width:250px; background:#1d4ed8; color:white; display:flex; flex-direction:column;}
 .sidebar h2{text-align:center; padding:20px 0; font-size:1.8rem; border-bottom:1px solid rgba(255,255,255,0.2);}
 .sidebar a{color:white; text-decoration:none; padding:15px 20px; display:block; transition:0.3s; cursor:pointer;}
@@ -53,6 +118,8 @@ button.action-btn:hover{background:#1e40af;}
 
 <div id="loading"><div class="loader"></div></div>
 <div id="alerts"></div>
+<!-- Add this button inside body before sidebar -->
+<button id="sidebar-toggle" style="display:none; position:fixed; top:15px; left:15px; z-index:2000; background:#1d4ed8; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer;">☰</button>
 
 <div class="sidebar">
     <h2>Pocket Money</h2>
@@ -153,6 +220,20 @@ button.action-btn:hover{background:#1e40af;}
 </div>
 
 <script>
+    // Toggle sidebar for small screens
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebar = document.querySelector('.sidebar');
+window.addEventListener('resize', checkSidebar);
+checkSidebar();
+function checkSidebar() {
+    if(window.innerWidth <= 768) { sidebarToggle.style.display='block'; sidebar.style.display='none'; }
+    else { sidebarToggle.style.display='none'; sidebar.style.display='flex'; }
+}
+sidebarToggle.onclick = () => {
+    if(sidebar.style.display==='none') sidebar.style.display='flex';
+    else sidebar.style.display='none';
+};
+
 // ------------------- Loading & Alerts -------------------
 function showLoading(show=true){document.getElementById('loading').classList.toggle('show', show);}
 function showAlert(msg){const el=document.getElementById('alerts'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3000);}
@@ -162,6 +243,36 @@ let students = JSON.parse(localStorage.getItem('students')) || {};
 let lastStudentId = parseInt(localStorage.getItem('lastStudentId')) || 0;
 let transactionHistory = JSON.parse(localStorage.getItem('transactionHistory')) || [];
 let selectedStudentId=null;
+// ------------------- Automatic Log File Generation -------------------
+function generateLogFile() {
+    const data = {
+        students: students,
+        transactionHistory: transactionHistory,
+        lastUpdated: new Date().toISOString()
+    };
+    const jsonStr = JSON.stringify(data, null, 2); // Pretty print
+    const blob = new Blob([jsonStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+
+    let logLink = document.getElementById('download-log');
+    if(!logLink){
+        logLink = document.createElement('a');
+        logLink.id = 'download-log';
+        logLink.style.display = 'none';
+        document.body.appendChild(logLink);
+    }
+    logLink.href = url;
+    logLink.download = `pocket_money_log_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+}
+
+// ------------------- Override saveData to also create log -------------------
+function saveData(){
+    localStorage.setItem('students',JSON.stringify(students));
+    localStorage.setItem('lastStudentId',lastStudentId);
+    localStorage.setItem('transactionHistory',JSON.stringify(transactionHistory));
+    generateLogFile(); // Automatically update log
+}
+
 
 // ------------------- Save -------------------
 function saveData(){localStorage.setItem('students',JSON.stringify(students)); localStorage.setItem('lastStudentId',lastStudentId); localStorage.setItem('transactionHistory',JSON.stringify(transactionHistory));}
@@ -285,7 +396,37 @@ function logout(){if(confirm('Logout?')){window.location.href='index.html';}}
 
 // ------------------- Initial -------------------
 renderStudentsTable(); renderTransactionTable(); renderHistoryTable(); updateSummary(); renderChart();
+// ------------------- Auto-Save Every 5 Seconds -------------------
+setInterval(() => {
+    saveData();
+    generateLogFile();
+}, 5000);
+
+// ------------------- Generate Log File -------------------
+function generateLogFile() {
+    const data = {
+        students: students,
+        transactionHistory: transactionHistory,
+        lastUpdated: new Date().toISOString()
+    };
+    const jsonStr = JSON.stringify(data, null, 2); // Pretty print
+    const blob = new Blob([jsonStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    
+    // Create or replace existing link
+    let logLink = document.getElementById('download-log');
+    if(!logLink){
+        logLink = document.createElement('a');
+        logLink.id = 'download-log';
+        logLink.style.display = 'none';
+        document.body.appendChild(logLink);
+    }
+    logLink.href = url;
+    logLink.download = `pocket_money_log_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+}
+
 </script>
+
 
 </body>
 </html>
