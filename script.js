@@ -16,3 +16,21 @@
             document.getElementById('error').innerText="Invalid credential";
         }
     }
+    window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        const container = document.getElementById('main-content');
+        container.style.display = 'flex';
+        container.classList.add('show');
+
+        const left = document.getElementById('left-section');
+        const right = document.getElementById('right-section');
+        left.classList.add('show');
+
+        // Add animation class to login box
+        const loginBox = document.getElementById('login-box');
+        loginBox.classList.add('show');
+
+        right.classList.add('show');
+    }, 2000);
+});
