@@ -3,431 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pocket Money Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-* {box-sizing:border-box; margin:0; padding:0; font-family: Arial, sans-serif;}
-body {display:flex; min-height:100vh; background:#f3f4f6; position:relative;}
-/* Sidebar */
+<title>Student Pocke Money system</title>
+<link rel="stylesheet" href="style.css">
 
-/* Existing CSS ... keep all of it */
-
-@media (max-width: 1024px) {
-    .main-header h1 { font-size: 1.5rem; }
-    .main-header button { padding: 6px 12px; font-size: 0.9rem; }
-}
-/* Sidebar adjustments for responsiveness */
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 200px; /* slightly smaller on tablets */
-    }
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;            /* full width for mobile */
-        flex-direction: row;    /* horizontal layout */
-        overflow-x: auto;       /* allow scrolling if links overflow */
-        position: relative;     
-    }
-    .sidebar h2 {
-        display: none;          /* hide title on small screens */
-    }
-    .sidebar a {
-        flex: 1;
-        text-align: center;
-        padding: 12px 10px;
-        white-space: nowrap;    /* prevent wrapping */
-    }
-}
-
-/* Optional: make the sidebar toggle button always visible on small screens */
-#sidebar-toggle {
-    display: block;            /* show toggle on small screens */
-}
-
-@media (max-width: 768px) {
-    body { flex-direction: column; }
-    .sidebar {
-        width: 100%; 
-        flex-direction: row; 
-        overflow-x: auto; 
-        position: relative;
-    }
-    .sidebar h2 { display: none; } /* Hide sidebar title on small screens */
-    .sidebar a { flex: 1; text-align: center; padding: 12px 10px; white-space: nowrap; }
-    .main { padding: 10px; }
-    .profile-pic { width: 80px; height: 80px; }
-    .summary-card { flex-direction: column; }
-    .summary-card .summary { margin-bottom: 10px; margin-right: 0; }
-    table { display: block; overflow-x: auto; white-space: nowrap; }
-    input, select, button.action-btn { font-size: 1rem; }
-}
-
-@media (max-width: 480px) {
-    .main-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .main-header h1 { font-size: 1.3rem; }
-    .main-header button { width: 100%; }
-    .card { padding: 15px; }
-    .summary-card .summary h2 { font-size: 1.3rem; }
-    .summary-card .summary p { font-size: 0.9rem; }
-}
-
-
-.sidebar {width:250px; background:#1d4ed8; color:white; display:flex; flex-direction:column;}
-.sidebar h2{text-align:center; padding:20px 0; font-size:1.8rem; border-bottom:1px solid rgba(255,255,255,0.2);}
-.sidebar a{color:white; text-decoration:none; padding:15px 20px; display:block; transition:0.3s; cursor:pointer;}
-.sidebar a:hover{background:#1e40af;}
-/* Main content */
-.main{flex:1; padding:20px; overflow-y:auto; position:relative;}
-.main-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
-.main-header h1{font-size:1.8rem; color:#1f2937;}
-.main-header button{padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;}
-.main-header button:hover{background:#dc2626;}
-/* Cards */
-.card{background:white; padding:20px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); margin-bottom:20px; display:none; opacity:0; transform:translateY(20px); transition: opacity 0.5s, transform 0.5s;}
-.card.show{display:block; opacity:1; transform:translateY(0);}
-.summary-card{display:flex; justify-content:space-between; margin-bottom:20px;}
-.summary-card .summary{flex:1; margin-right:10px; padding:15px; border-radius:12px; background:#e0f2fe; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-.summary-card .summary:last-child{margin-right:0;}
-.summary-card .summary h2{font-size:1.5rem; color:#1d4ed8; margin-bottom:5px;}
-.summary-card .summary p{font-size:1rem; color:#1f2937;}
-table{width:100%; border-collapse:collapse; transition:all 0.3s;}
-table th, table td{border:1px solid #d1d5db; padding:10px; text-align:left; cursor:pointer;}
-table th{background:#1d4ed8; color:white;}
-table tr:hover{background:#e0e7ff;}
-input{padding:8px 10px; margin-bottom:10px; border:1px solid #d1d5db; border-radius:6px; width:100%; transition:0.3s;}
-input:focus{border-color:#1d4ed8; outline:none; box-shadow:0 0 5px rgba(29,78,216,0.5);}
-select{padding:8px 10px; margin-bottom:10px; border:1px solid #d1d5db; border-radius:6px; width:100%;}
-button.action-btn{padding:8px 12px; background:#1d4ed8; color:white; border:none; border-radius:6px; cursor:pointer; transition:0.3s;}
-button.action-btn:hover{background:#1e40af;}
-#loading{position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; justify-content:center; align-items:center; z-index:1000; display:none; opacity:0; transition:opacity 0.3s;}
-#loading.show{display:flex; opacity:1;}
-.loader{border:6px solid #f3f3f3; border-top:6px solid #1d4ed8; border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;}
-@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.profile-pic{width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom:15px;}
-#alerts{position:fixed; top:20px; right:20px; background:#fef3c7; color:#b45309; padding:15px 20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; pointer-events:none; transition:opacity 0.5s; z-index:9999;}
-#alerts.show{opacity:1; pointer-events:auto;}
-.pagination{margin-top:10px; display:flex; justify-content:center; gap:5px;}
-.pagination button{padding:5px 10px; border:none; border-radius:5px; cursor:pointer; background:#1d4ed8; color:white;}
-.pagination button:hover{background:#1e40af;}
-@media(max-width:768px){body{flex-direction:column;}.sidebar{width:100%; flex-direction:row; overflow-x:auto;}.sidebar a{flex:1; text-align:center;}.profile-pic{width:80px;height:80px;}.summary-card{flex-direction:column;}.summary-card .summary{margin-bottom:10px; margin-right:0;}}
-</style>
 </head>
 <body>
 
-<div id="loading"><div class="loader"></div></div>
-<div id="alerts"></div>
-<!-- Add this button inside body before sidebar -->
-<button id="sidebar-toggle" style="display:none; position:fixed; top:15px; left:15px; z-index:2000; background:#1d4ed8; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer;">☰</button>
+<!-- Loading Screen -->
+<div id="loading-screen">
+    <div class="spinner"></div><br><br>
+    <div class="money">
 
-<div class="sidebar">
-    <h2>Pocket Money</h2>
-    <a onclick="showSection('dashboard')">Dashboard Summary</a>
-    <a onclick="showSection('students')">Students</a>
-    <a onclick="showSection('add-student')">Add Student</a>
-    <a onclick="showSection('transactions')">Transactions</a>
-    <a onclick="showSection('history')">History</a>
-    <a onclick="showSection('reports')">Reports</a>
-    <a onclick="showSection('profile')">Profile</a>
-    <a onclick="logout()">Logout</a>
+    </div>
+    
 </div>
 
-<div class="main">
-    <div class="main-header">
-        <h1>Pocket Money Dashboard</h1>
-        <button onclick="logout()">Logout</button>
+<div class="container" id="main-content">
+    <!-- Left Side -->
+     
+    <div class="left" id="left-section">
+         <marquee behavior="move" direction="right"><h1>Welcome</h1></marquee>
+        <img src="image.png" alt="">
+       <h1>The New Digital Service Smart school assistant System</h1></marquee>
+        <p>"Let's continue building the Smart school assistant System"</p>
     </div>
 
-    <!-- Dashboard Summary -->
-    <div class="card" id="dashboard-section">
-        <h3>System Summary & Chart</h3>
-        <div class="summary-card">
-            <div class="summary"><h2 id="total-money">0 RWF</h2><p>Total Money</p></div>
-            <div class="summary"><h2 id="total-students">0</h2><p>Total Students</p></div>
-            <div class="summary"><h2 id="low-balance">0</h2><p>Low Balance</p></div>
+    <!-- Right Side -->
+    <div class="right" id="right-section">
+        <div class="login-box" id="login-box">
+            <h2>Login to Your Account</h2>
+            <form id="login-form">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" required placeholder="Type your Email ...">
+
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required placeholder="Type your Password ...">
+
+                <div id="password-strength"></div>
+
+                <button type="submit">
+                    <span class="loader-btn" style="display:none;"></span>
+                    Login
+                </button>
+            </form>
+            <p>Forgot your password? <a href="#">Reset here</a></p>
         </div>
-        <canvas id="balanceChart" style="max-width:100%; height:300px;"></canvas>
-    </div>
-
-    <!-- Students Section -->
-    <div class="card" id="students-section">
-        <h3>Students List</h3>
-        <input type="text" id="student-search" placeholder="Search by name" oninput="renderStudentsTable()">
-        <table id="students-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Amount</th></tr></thead>
-            <tbody></tbody>
-        </table>
-        <div class="pagination" id="students-pagination"></div>
-    </div>
-
-    <!-- Add Student Section -->
-    <div class="card" id="add-student-section">
-        <h3>Add New Student</h3>
-        <input type="text" id="new-student-name" placeholder="Enter full name">
-        <input type="number" id="new-student-amount" placeholder="Enter initial amount (default 0)">
-        <button class="action-btn" onclick="addStudent()">Add Student</button>
-    </div>
-
-    <!-- Transactions Section -->
-    <div class="card" id="transactions-section">
-        <h3>Make Transaction</h3>
-        <input type="text" id="transaction-search" placeholder="Search student..." oninput="renderTransactionTable()">
-        <table id="transaction-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Amount</th></tr></thead>
-            <tbody></tbody>
-        </table>
-        <label for="transaction-type">Transaction Type</label>
-        <select id="transaction-type"><option value="add">Add Money</option><option value="deduct">Deduct Money</option></select>
-        <label for="transaction-amount">Amount</label>
-        <input type="number" id="transaction-amount" placeholder="Enter amount">
-        <button class="action-btn" onclick="submitTransaction()">Submit</button>
-    </div>
-
-    <!-- History Section -->
-    <div class="card" id="history-section">
-        <h3>Transaction History</h3>
-        <input type="text" id="history-search" placeholder="Search by student name" oninput="renderHistoryTable()">
-        <table id="history-table">
-            <thead><tr><th>Date</th><th>Student</th><th>Type</th><th>Amount</th><th>Balance After</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- Reports Section -->
-    <div class="card" id="reports-section">
-        <h3>Reports</h3>
-        <div class="summary-card">
-            <div class="summary"><h2 id="report-total-money">0 RWF</h2><p>Total Money</p></div>
-            <div class="summary"><h2 id="report-total-students">0</h2><p>Total Students</p></div>
-            <div class="summary"><h2 id="report-low-balance">0</h2><p>Low Balance</p></div>
-        </div>
-        <canvas id="reportChart" style="max-width:100%; height:300px;"></canvas>
-        <h4>Transaction History</h4>
-        <table id="report-table">
-            <thead><tr><th>Date</th><th>Student</th><th>Type</th><th>Amount</th><th>Balance After</th></tr></thead>
-            <tbody></tbody>
-        </table>
-        <button class="action-btn" onclick="printReport()">Print Report</button>
-    </div>
-
-    <!-- Profile Section -->
-    <div class="card" id="profile-section">
-        <h3>Profile</h3>
-        <img src="https://i.pravatar.cc/100" class="profile-pic" alt="Profile Picture">
-        <p>Name: NIYITANGA Eric</p>
     </div>
 </div>
 
 <script>
-    // Toggle sidebar for small screens
-const sidebarToggle = document.getElementById('sidebar-toggle');
-const sidebar = document.querySelector('.sidebar');
-window.addEventListener('resize', checkSidebar);
-checkSidebar();
-function checkSidebar() {
-    if(window.innerWidth <= 768) { sidebarToggle.style.display='block'; sidebar.style.display='none'; }
-    else { sidebarToggle.style.display='none'; sidebar.style.display='flex'; }
+// Page loading
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        const container = document.getElementById('main-content');
+        container.style.display = 'flex';
+        container.classList.add('show');
+
+        document.getElementById('left-section').classList.add('show');
+        document.getElementById('right-section').classList.add('show');
+    }, 2000);
+});
+
+// Password strength checker
+const passwordInput = document.getElementById('password');
+const strengthText = document.getElementById('password-strength');
+
+passwordInput.addEventListener('input', () => {
+    const value = passwordInput.value;
+    let strength = '';
+    if(value.length < 6) strength = 'Weak';
+    else if(value.length < 10) strength = 'Medium';
+    else strength = 'Strong';
+
+    strengthText.textContent = strength;
+    strengthText.className = '';
+    if(strength === 'Weak') strengthText.classList.add('weak');
+    if(strength === 'Medium') strengthText.classList.add('medium');
+    if(strength === 'Strong') strengthText.classList.add('strong');
+});
+
+// Login verification
+const loginForm = document.getElementById('login-form');
+const loginButton = loginForm.querySelector('button');
+const loaderBtn = loginButton.querySelector('.loader-btn');
+const loginBox = document.getElementById('login-box');
+
+const VALID_EMAIL = "niyitangaeric77@gmail.com";
+const VALID_PASSWORD = "Eric123456@";
+
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    loaderBtn.style.display = 'inline-block';
+    loginButton.classList.add('loading');
+
+    setTimeout(() => {
+        loaderBtn.style.display = 'none';
+        loginButton.classList.remove('loading');
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if(email === VALID_EMAIL && password === VALID_PASSWORD){
+            showNotification("✅ Login successful! ", "success");
+            // Redirect to Pocket Money System dashboard
+            setTimeout(() => {
+                window.location.href = "dashboard.html"; // Replace with your dashboard path
+            }, 1500);
+        } else {
+            showNotification("❌ Invalid email or password", "error");
+            loginBox.classList.add('shake');
+            setTimeout(() => loginBox.classList.remove('shake'), 500);
+        }
+    }, 1200);
+});
+
+// Notification system
+function showNotification(message, type){
+    const notification = document.createElement("div");
+    notification.textContent = message;
+    notification.className = `notification ${type}`;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.style.opacity = '1', 100);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
 }
-sidebarToggle.onclick = () => {
-    if(sidebar.style.display==='none') sidebar.style.display='flex';
-    else sidebar.style.display='none';
-};
-
-// ------------------- Loading & Alerts -------------------
-function showLoading(show=true){document.getElementById('loading').classList.toggle('show', show);}
-function showAlert(msg){const el=document.getElementById('alerts'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3000);}
-
-// ------------------- Data -------------------
-let students = JSON.parse(localStorage.getItem('students')) || {};
-let lastStudentId = parseInt(localStorage.getItem('lastStudentId')) || 0;
-let transactionHistory = JSON.parse(localStorage.getItem('transactionHistory')) || [];
-let selectedStudentId=null;
-// ------------------- Automatic Log File Generation -------------------
-function generateLogFile() {
-    const data = {
-        students: students,
-        transactionHistory: transactionHistory,
-        lastUpdated: new Date().toISOString()
-    };
-    const jsonStr = JSON.stringify(data, null, 2); // Pretty print
-    const blob = new Blob([jsonStr], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-
-    let logLink = document.getElementById('download-log');
-    if(!logLink){
-        logLink = document.createElement('a');
-        logLink.id = 'download-log';
-        logLink.style.display = 'none';
-        document.body.appendChild(logLink);
-    }
-    logLink.href = url;
-    logLink.download = `pocket_money_log_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
-}
-
-// ------------------- Override saveData to also create log -------------------
-function saveData(){
-    localStorage.setItem('students',JSON.stringify(students));
-    localStorage.setItem('lastStudentId',lastStudentId);
-    localStorage.setItem('transactionHistory',JSON.stringify(transactionHistory));
-    generateLogFile(); // Automatically update log
-}
-
-
-// ------------------- Save -------------------
-function saveData(){localStorage.setItem('students',JSON.stringify(students)); localStorage.setItem('lastStudentId',lastStudentId); localStorage.setItem('transactionHistory',JSON.stringify(transactionHistory));}
-
-// ------------------- Summary -------------------
-function updateSummary(){
-    let total=0,low=0;
-    Object.values(students).forEach(s=>{total+=s.amount||0; if((s.amount||0)<5000) low++;});
-    document.getElementById('total-money').textContent=total+' RWF';
-    document.getElementById('total-students').textContent=Object.keys(students).length;
-    document.getElementById('low-balance').textContent=low;
-}
-
-// ------------------- Line Chart -------------------
-let chart=null;
-function renderChart(){
-    const ctx=document.getElementById('balanceChart').getContext('2d');
-    const labels=[], data=[];
-    Object.values(students).forEach(s=>{labels.push(s.name); data.push(s.amount||0);});
-    if(chart) chart.data.labels=labels, chart.data.datasets[0].data=data, chart.update();
-    else chart=new Chart(ctx,{type:'line', data:{labels, datasets:[{label:'Balance', data, fill:false, borderColor:'#1d4ed8', tension:0.3, pointBackgroundColor:'#1d4ed8'}]}, options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
-}
-
-// ------------------- Pagination & Students -------------------
-let studentsPerPage=25, currentPage=1;
-function renderStudentsTable(){
-    const tbody=document.getElementById('students-table').querySelector('tbody'); tbody.innerHTML='';
-    const filter=document.getElementById('student-search').value.toLowerCase();
-    const allStudents=Object.entries(students).filter(([id,s])=>s.name.toLowerCase().includes(filter));
-    const pageCount=Math.ceil(allStudents.length/studentsPerPage);
-    if(currentPage>pageCount) currentPage=1;
-    const start=(currentPage-1)*studentsPerPage;
-    const end=start+studentsPerPage;
-    allStudents.slice(start,end).forEach(([id,s])=>{tbody.insertAdjacentHTML('beforeend',`<tr><td>${id}</td><td>${s.name}</td><td>${s.amount||0}</td></tr>`);});
-    const pagination=document.getElementById('students-pagination'); pagination.innerHTML='';
-    for(let i=1;i<=pageCount;i++){const btn=document.createElement('button'); btn.textContent=i; if(i===currentPage) btn.style.background='#ef4444'; btn.onclick=()=>{currentPage=i; renderStudentsTable();}; pagination.appendChild(btn);}
-}
-
-// ------------------- Add Student -------------------
-function addStudent(){
-    const name=document.getElementById('new-student-name').value.trim();
-    let amount=parseInt(document.getElementById('new-student-amount').value);
-    if(!amount) amount=0;
-    if(!name){alert('Enter name'); return;}
-    lastStudentId++; students[lastStudentId]={name,amount}; saveData();
-    document.getElementById('new-student-name').value=''; document.getElementById('new-student-amount').value='';
-    showAlert(`Student "${name}" added!`); renderStudentsTable(); updateSummary(); renderChart();
-}
-
-// ------------------- Transaction Table -------------------
-function renderTransactionTable(){
-    const tbody=document.getElementById('transaction-table').querySelector('tbody'); tbody.innerHTML='';
-    const filter=document.getElementById('transaction-search').value.toLowerCase();
-    Object.entries(students).forEach(([id,s])=>{
-        if(filter && !s.name.toLowerCase().includes(filter)) return;
-        const row=document.createElement('tr');
-        row.innerHTML=`<td>${id}</td><td>${s.name}</td><td>${s.amount||0}</td>`;
-        row.onclick=()=>{ selectedStudentId=id; highlightRow(row); };
-        tbody.appendChild(row);
-    });
-}
-function highlightRow(row){document.querySelectorAll('#transaction-table tbody tr').forEach(r=>r.style.background=''); row.style.background='#e0e7ff';}
-
-// ------------------- Submit Transaction -------------------
-function submitTransaction(){
-    if(!selectedStudentId){alert('Select a student from table'); return;}
-    const type=document.getElementById('transaction-type').value;
-    const amount=parseInt(document.getElementById('transaction-amount').value);
-    if(!amount||amount<=0){alert('Enter valid amount'); return;}
-    if(type==='add'){students[selectedStudentId].amount=(students[selectedStudentId].amount||0)+amount;}
-    else{ if((students[selectedStudentId].amount||0)<amount){alert('Insufficient balance'); return;} students[selectedStudentId].amount-=amount;}
-    const date=new Date().toLocaleDateString();
-    transactionHistory.push({date, student:students[selectedStudentId].name, type:type==='add'?'Add':'Deduct', amount, balance:students[selectedStudentId].amount});
-    saveData(); renderTransactionTable(); renderStudentsTable(); renderHistoryTable(); updateSummary(); renderChart();
-    showAlert(`Transaction "${type}" of ${amount} RWF for ${students[selectedStudentId].name} successful!`);
-    document.getElementById('transaction-amount').value=''; selectedStudentId=null;
-}
-
-// ------------------- History -------------------
-function renderHistoryTable(){
-    const tbody=document.getElementById('history-table').querySelector('tbody'); tbody.innerHTML='';
-    const filter=document.getElementById('history-search').value.toLowerCase();
-    transactionHistory.forEach(t=>{ if(filter && !t.student.toLowerCase().includes(filter)) return;
-        tbody.insertAdjacentHTML('beforeend', `<tr><td>${t.date}</td><td>${t.student}</td><td>${t.type}</td><td>${t.amount}</td><td>${t.balance}</td></tr>`); });
-}
-
-// ------------------- Reports -------------------
-let reportChart=null;
-function renderReports(){
-    let total=0, low=0;
-    Object.values(students).forEach(s=>{total+=s.amount||0; if((s.amount||0)<5000) low++;});
-    document.getElementById('report-total-money').textContent=total+' RWF';
-    document.getElementById('report-total-students').textContent=Object.keys(students).length;
-    document.getElementById('report-low-balance').textContent=low;
-    const ctx=document.getElementById('reportChart').getContext('2d');
-    const labels=[], data=[];
-    Object.values(students).forEach(s=>{labels.push(s.name); data.push(s.amount||0);});
-    if(reportChart) reportChart.data.labels=labels, reportChart.data.datasets[0].data=data, reportChart.update();
-    else reportChart=new Chart(ctx,{type:'line', data:{labels, datasets:[{label:'Balance', data, fill:false, borderColor:'#1d4ed8', tension:0.3, pointBackgroundColor:'#1d4ed8'}]}, options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
-    const tbody=document.getElementById('report-table').querySelector('tbody'); tbody.innerHTML='';
-    transactionHistory.forEach(t=>{tbody.insertAdjacentHTML('beforeend', `<tr><td>${t.date}</td><td>${t.student}</td><td>${t.type}</td><td>${t.amount}</td><td>${t.balance}</td></tr>`);});
-}
-
-// ------------------- Print -------------------
-function printReport(){const printContents=document.getElementById('reports-section').innerHTML; const originalContents=document.body.innerHTML; document.body.innerHTML=printContents; window.print(); document.body.innerHTML=originalContents; window.location.reload();}
-
-// ------------------- Section Navigation -------------------
-function showSection(section){
-    showLoading(true);
-    setTimeout(()=>{
-        document.querySelectorAll('.card').forEach(c=>c.classList.remove('show'));
-        document.getElementById(section+'-section').classList.add('show');
-        renderStudentsTable(); renderTransactionTable(); renderHistoryTable(); updateSummary(); renderChart();
-        if(section==='reports') renderReports();
-        showLoading(false);
-    },2000);
-}
-
-// ------------------- Logout -------------------
-function logout(){if(confirm('Logout?')){window.location.href='index.html';}}
-
-// ------------------- Initial -------------------
-renderStudentsTable(); renderTransactionTable(); renderHistoryTable(); updateSummary(); renderChart();
-// ------------------- Auto-Save Every 5 Seconds -------------------
-setInterval(() => {
-    saveData();
-    generateLogFile();
-}, 5000);
-
-// ------------------- Generate Log File -------------------
-function generateLogFile() {
-    const data = {
-        students: students,
-        transactionHistory: transactionHistory,
-        lastUpdated: new Date().toISOString()
-    };
-    const jsonStr = JSON.stringify(data, null, 2); // Pretty print
-    const blob = new Blob([jsonStr], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
+passwordInput.addEventListener('input', () => {
+    const value = passwordInput.value;
+    let strength = '';
     
-    // Create or replace existing link
-    let logLink = document.getElementById('download-log');
-    if(!logLink){
-        logLink = document.createElement('a');
-        logLink.id = 'download-log';
-        logLink.style.display = 'none';
-        document.body.appendChild(logLink);
+    if(value.length < 6) strength = 'Weak';
+    else if(value.length < 10) strength = 'Medium';
+    else strength = 'Strong';
+
+    strengthText.textContent = strength;
+    strengthText.className = '';
+    loginButton.style.backgroundColor = ''; // reset
+
+    if(strength === 'Weak') {
+        strengthText.classList.add('weak');
+        loginButton.style.backgroundColor = '#dc2626'; // red
     }
-    logLink.href = url;
-    logLink.download = `pocket_money_log_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
-}
+    if(strength === 'Medium') {
+        strengthText.classList.add('medium');
+        loginButton.style.backgroundColor = '#f59e0b'; // orange
+    }
+    if(strength === 'Strong') {
+        strengthText.classList.add('strong');
+        loginButton.style.backgroundColor = '#16a34a'; // green
+    }
+});
 
 </script>
 
-
 </body>
 </html>
-
