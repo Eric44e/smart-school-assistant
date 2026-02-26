@@ -1,163 +1,514 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Pocke Money system</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Pocket Money System | Login</title>
+  <!-- Font Awesome 6 (free) for clean icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
 
+    body {
+      min-height: 100vh;
+      background: linear-gradient(145deg, #f3f6fb 0%, #eef2f6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 1rem;
+    }
+
+    /* ---- LOADING (preserved original style but refined) ---- */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease, visibility 0.6s;
+    }
+    #loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #e0e7ff;
+      border-top-color: #2563eb; /* primary blue */
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .money {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #1e293b;
+      letter-spacing: 1px;
+    }
+    .money::after {
+      content: "💸 Student Pocket Money";
+      animation: fadeDots 2s infinite;
+    }
+    @keyframes fadeDots {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* ---- MAIN CONTAINER (professional card layout) ---- */
+    .container {
+      max-width: 1320px;
+      width: 100%;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 2.5rem;
+      box-shadow: 0 30px 60px -10px rgba(0, 20, 40, 0.2), 0 0 0 1px rgba(255,255,255,0.6) inset;
+      display: none; /* hidden until loading ends */
+      overflow: hidden;
+      transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.3, 1), transform 0.8s ease;
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    .container.show {
+      opacity: 1;
+      transform: scale(1);
+      display: flex !important;
+      flex-wrap: wrap;
+    }
+
+    /* ---- LEFT SIDE (fresh & vibrant, keeping original style) ---- */
+    .left {
+      flex: 1 1 45%;
+      background: linear-gradient(155deg, #1e3a8a 0%, #3b82f6 100%); /* deep blue to bright blue */
+      padding: 3rem 2.5rem;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      isolation: isolate;
+    }
+    .left::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="rgba(255,255,255,0.05)"><path d="M20 20 L80 20 L70 80 L30 80 Z" /></svg>');
+      background-size: 120px;
+      opacity: 0.15;
+      z-index: -1;
+    }
+    .left marquee {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #ffffff;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .left img {
+      max-width: 280px;
+      width: 100%;
+      margin: 1rem 0 1.5rem;
+      filter: drop-shadow(0 15px 15px rgba(0,0,0,0.25));
+      border-radius: 30px;
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem;
+      backdrop-filter: blur(4px);
+    }
+    .left h1 {
+      font-size: 2.2rem;
+      line-height: 1.3;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: white;
+    }
+    .left p {
+      font-size: 1.3rem;
+      opacity: 0.9;
+      font-weight: 400;
+      border-left: 4px solid #ffd966;
+      padding-left: 1.2rem;
+    }
+
+    /* ---- RIGHT SIDE (clean glass panel) ---- */
+    .right {
+      flex: 1 1 45%;
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 3rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      transition: all 0.2s;
+    }
+    .login-box h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .login-box h2 i {
+      color: #2563eb;
+      font-size: 2rem;
+    }
+
+    /* ---- FORM (refined inputs & colors) ---- */
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+    }
+    .form-group label i {
+      color: #2563eb;
+      width: 22px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37,99,235,0.15);
+    }
+
+    /* password strength (dynamic colors kept) */
+    #password-strength {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      padding-left: 0.5rem;
+    }
+    .weak { color: #dc2626; }
+    .medium { color: #f59e0b; }
+    .strong { color: #16a34a; }
+
+    /* ---- BUTTON (professional, loader, dynamic bg kept) ---- */
+    .login-btn {
+      width: 100%;
+      background: #2563eb; /* default blue, changed by JS */
+      border: none;
+      padding: 1rem;
+      border-radius: 40px;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 10px 20px -8px rgba(37,99,235,0.4);
+      border: 1px solid rgba(255,255,255,0.3);
+      margin-top: 0.5rem;
+    }
+    .login-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 25px -10px currentColor;
+    }
+    .login-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 5px 12px -6px currentColor;
+    }
+    .login-btn.loading {
+      opacity: 0.8;
+      cursor: wait;
+    }
+    .loader-btn {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.7s linear infinite;
+    }
+
+    /* extra link */
+    .forgot-link {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.95rem;
+      color: #475569;
+    }
+    .forgot-link a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px dashed #2563eb;
+    }
+    .forgot-link a:hover {
+      border-bottom-style: solid;
+    }
+
+    /* shake animation (preserved) */
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    /* notification (elegant) */
+    .notification {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      padding: 1rem 2rem;
+      border-radius: 60px;
+      background: white;
+      box-shadow: 0 20px 35px -8px rgba(0,0,0,0.2);
+      font-weight: 600;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      border-left: 6px solid;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(8px);
+    }
+    .notification.success {
+      background: #f0fdf4;
+      border-left-color: #16a34a;
+      color: #166534;
+    }
+    .notification.error {
+      background: #fef2f2;
+      border-left-color: #dc2626;
+      color: #991b1b;
+    }
+    .notification i {
+      font-size: 1.4rem;
+    }
+
+    /* responsive */
+    @media (max-width: 900px) {
+      .container.show { flex-direction: column; }
+      .left, .right { flex: auto; }
+      .left { text-align: center; align-items: center; }
+      .left marquee { font-size: 1.8rem; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- Loading Screen -->
+<!-- Loading Screen (preserved) -->
 <div id="loading-screen">
-    <div class="spinner"></div><br><br>
-    <div class="money">
-
-    </div>
-    
+  <div class="spinner"></div>
+  <div class="money"></div>
 </div>
 
+<!-- Main Dashboard Login -->
 <div class="container" id="main-content">
-    <!-- Left Side -->
-     
-    <div class="left" id="left-section">
-         <marquee behavior="move" direction="right"><h1>Welcome</h1></marquee>
-        <img src="image.png" alt="">
-       <h1>The New Digital Service Smart school assistant System</h1></marquee>
-        <p>"Let's continue building the Smart school assistant System"</p>
-    </div>
+  <!-- Left Side: refined but original vibe -->
+  <div class="left" id="left-section">
+    <marquee behavior="scroll" direction="right" scrollamount="6"><h1>🌟 Welcome</h1></marquee>
+    <!-- placeholder img: using a system icon instead of missing image.png -->
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='180' viewBox='0 0 280 180'%3E%3Crect width='280' height='180' fill='white' opacity='0.25' rx='30'/%3E%3Ctext x='40' y='100' font-family='Arial' font-size='28' fill='white' font-weight='bold'%3E📘 Smart School%3C/text%3E%3Ctext x='40' y='140' font-family='Arial' font-size='24' fill='white' opacity='0.9'%3Eassistant%3C/text%3E%3C/svg%3E"
+         alt="Smart School assistant icon">
+    <h1>The new digital service Smart school assistant System</h1>
+    <p>“Let's continue building the Smart school assistant System”</p>
+  </div>
 
-    <!-- Right Side -->
-    <div class="right" id="right-section">
-        <div class="login-box" id="login-box">
-            <h2>Login to Your Account</h2>
-            <form id="login-form">
-                <label for="email">Email</label>
-                <input type="email" name="email" id="email" required placeholder="Type your Email ...">
-
-                <label for="password">Password</label>
-                <input type="password" name="password" id="password" required placeholder="Type your Password ...">
-
-                <div id="password-strength"></div>
-
-                <button type="submit">
-                    <span class="loader-btn" style="display:none;"></span>
-                    Login
-                </button>
-            </form>
-            <p>Forgot your password? <a href="#">Reset here</a></p>
+  <!-- Right Side: professional login -->
+  <div class="right" id="right-section">
+    <div class="login-box" id="login-box">
+      <h2><i class="fas fa-wallet"></i> Pocket Money Login</h2>
+      <form id="login-form">
+        <div class="form-group">
+          <label><i class="far fa-envelope"></i> Email</label>
+          <input type="email" name="email" id="email" required placeholder="student@example.com" autocomplete="off">
         </div>
+
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Password</label>
+          <input type="password" name="password" id="password" required placeholder="••••••••" autocomplete="off">
+          <div id="password-strength"></div>
+        </div>
+
+        <button type="submit" class="login-btn" id="login-button">
+          <span class="loader-btn" id="btn-loader"></span>
+          <span id="btn-text">Login</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </form>
+      <p class="forgot-link">Forgot your password? <a href="#"><i class="fas fa-redo-alt"></i> Reset here</a></p>
     </div>
+  </div>
 </div>
 
+<!-- javascript (improved, but respecting original colors and logic) -->
 <script>
-// Page loading
-window.addEventListener('load', () => {
-    setTimeout(() => {
+  (function() {
+    // --- page loading (preserved 2s timeout, but enhanced smoothness)
+    window.addEventListener('load', () => {
+      setTimeout(() => {
         document.getElementById('loading-screen').classList.add('hidden');
         const container = document.getElementById('main-content');
-        container.style.display = 'flex';
+        container.style.display = 'flex';  // makes it flex, but container.show toggles opacity
         container.classList.add('show');
 
         document.getElementById('left-section').classList.add('show');
         document.getElementById('right-section').classList.add('show');
-    }, 2000);
-});
+      }, 2000); // keep original 2s
+    });
 
-// Password strength checker
-const passwordInput = document.getElementById('password');
-const strengthText = document.getElementById('password-strength');
+    // DOM elements
+    const passwordInput = document.getElementById('password');
+    const strengthText = document.getElementById('password-strength');
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
+    const btnLoader = document.getElementById('btn-loader');
+    const btnText = document.getElementById('btn-text');
+    const loginBox = document.getElementById('login-box');
 
-passwordInput.addEventListener('input', () => {
-    const value = passwordInput.value;
-    let strength = '';
-    if(value.length < 6) strength = 'Weak';
-    else if(value.length < 10) strength = 'Medium';
-    else strength = 'Strong';
+    // credentials (exactly as provided)
+    const VALID_EMAIL = "niyitangaeric77@gmail.com";
+    const VALID_PASSWORD = "Eric123456@";
 
-    strengthText.textContent = strength;
-    strengthText.className = '';
-    if(strength === 'Weak') strengthText.classList.add('weak');
-    if(strength === 'Medium') strengthText.classList.add('medium');
-    if(strength === 'Strong') strengthText.classList.add('strong');
-});
+    // --- Password strength checker (original logic + dynamic button bg)
+    function updateStrengthAndButton(value) {
+      let strength = '';
+      if (value.length < 6) strength = 'Weak';
+      else if (value.length < 10) strength = 'Medium';
+      else strength = 'Strong';
 
-// Login verification
-const loginForm = document.getElementById('login-form');
-const loginButton = loginForm.querySelector('button');
-const loaderBtn = loginButton.querySelector('.loader-btn');
-const loginBox = document.getElementById('login-box');
+      strengthText.textContent = strength;
+      // remove previous classes
+      strengthText.classList.remove('weak', 'medium', 'strong');
+      
+      // reset button background to default (will be overridden)
+      // but we keep the style from original: Weak→red, Medium→orange, Strong→green
+      if (strength === 'Weak') {
+        strengthText.classList.add('weak');
+        loginButton.style.backgroundColor = '#dc2626'; // red
+      } else if (strength === 'Medium') {
+        strengthText.classList.add('medium');
+        loginButton.style.backgroundColor = '#f59e0b'; // orange
+      } else if (strength === 'Strong') {
+        strengthText.classList.add('strong');
+        loginButton.style.backgroundColor = '#16a34a'; // green
+      } else {
+        // fallback (empty) set to blue
+        loginButton.style.backgroundColor = '#2563eb';
+      }
+    }
 
-const VALID_EMAIL = "niyitangaeric77@gmail.com";
-const VALID_PASSWORD = "Eric123456@";
+    passwordInput.addEventListener('input', (e) => {
+      updateStrengthAndButton(e.target.value);
+    });
 
-loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+    // initial empty state (show nothing)
+    strengthText.textContent = '';
 
-    loaderBtn.style.display = 'inline-block';
-    loginButton.classList.add('loading');
+    // --- Login verification (exactly as original with loader and notification)
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    setTimeout(() => {
-        loaderBtn.style.display = 'none';
+      // show loader, disable visual
+      btnLoader.style.display = 'inline-block';
+      loginButton.classList.add('loading');
+      loginButton.disabled = true;  // prevent double submit
+
+      // simulate network delay (1200ms as original)
+      setTimeout(() => {
+        btnLoader.style.display = 'none';
         loginButton.classList.remove('loading');
+        loginButton.disabled = false;
 
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
 
-        if(email === VALID_EMAIL && password === VALID_PASSWORD){
-            showNotification("✅ Login successful! ", "success");
-            // Redirect to Pocket Money System dashboard
-            setTimeout(() => {
-                window.location.href = "dashboard.html"; // Replace with your dashboard path
-            }, 1500);
+        if (email === VALID_EMAIL && password === VALID_PASSWORD) {
+          showNotification('✅ Login successful! Redirecting to dashboard...', 'success');
+          // redirect after short delay
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';  // placeholder
+          }, 1500);
         } else {
-            showNotification("❌ Invalid email or password", "error");
-            loginBox.classList.add('shake');
-            setTimeout(() => loginBox.classList.remove('shake'), 500);
+          showNotification('❌ Invalid email or password', 'error');
+          loginBox.classList.add('shake');
+          setTimeout(() => loginBox.classList.remove('shake'), 500);
+          
+          // also reset button color to reflect current strength (or keep)
+          // but we want to re-evaluate strength based on current password
+          updateStrengthAndButton(passwordInput.value);
         }
-    }, 1200);
-});
+      }, 1200);  // original 1200ms
+    });
 
-// Notification system
-function showNotification(message, type){
-    const notification = document.createElement("div");
-    notification.textContent = message;
-    notification.className = `notification ${type}`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.style.opacity = '1', 100);
-    setTimeout(() => {
+    // --- Notification system (preserved + icons)
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      
+      // add icon depending on type
+      const icon = type === 'success' ? '✅' : '❌';
+      notification.innerHTML = `<i>${icon}</i> ${message}`;
+      
+      document.body.appendChild(notification);
+      // fade in
+      setTimeout(() => notification.style.opacity = '1', 50);
+      // remove after 3s
+      setTimeout(() => {
         notification.style.opacity = '0';
-        setTimeout(() => notification.remove(), 500);
-    }, 3000);
-}
-passwordInput.addEventListener('input', () => {
-    const value = passwordInput.value;
-    let strength = '';
-    
-    if(value.length < 6) strength = 'Weak';
-    else if(value.length < 10) strength = 'Medium';
-    else strength = 'Strong';
-
-    strengthText.textContent = strength;
-    strengthText.className = '';
-    loginButton.style.backgroundColor = ''; // reset
-
-    if(strength === 'Weak') {
-        strengthText.classList.add('weak');
-        loginButton.style.backgroundColor = '#dc2626'; // red
+        setTimeout(() => notification.remove(), 400);
+      }, 3000);
     }
-    if(strength === 'Medium') {
-        strengthText.classList.add('medium');
-        loginButton.style.backgroundColor = '#f59e0b'; // orange
-    }
-    if(strength === 'Strong') {
-        strengthText.classList.add('strong');
-        loginButton.style.backgroundColor = '#16a34a'; // green
-    }
-});
 
+    // small: if user clears password, reset button color to default blue
+    passwordInput.addEventListener('blur', (e) => {
+      if (e.target.value === '') {
+        loginButton.style.backgroundColor = '#2563eb'; // original blue
+        strengthText.textContent = '';
+      }
+    });
+
+    // extra: keep the button color sync even if they type slow
+    // and initialize button with default blue
+    window.addEventListener('DOMContentLoaded', () => {
+      loginButton.style.backgroundColor = '#2563eb';
+    });
+  })();
 </script>
-
+<!-- small note: to simulate dashboard.html, you can replace with "#" for demo -->
 </body>
 </html>
